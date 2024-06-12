@@ -14,7 +14,7 @@
 You'll need to install the Azure and OpenAI SDKs. You can do this using pip:
 
 ```bash
-pip install openai azure-identity azure-mgmt-openai
+!pip install openai --quiet
 ```
 
 ## Step 3: Authentication and Setup
@@ -22,21 +22,21 @@ pip install openai azure-identity azure-mgmt-openai
 You'll need to authenticate with Azure and set up the OpenAI client.
 
 ```python
-from azure.identity import DefaultAzureCredential
-from azure.mgmt.openai import OpenAIManagementClient
+api_key = "c3cbe9bf946c4f449b4de783ad3043bb"
+api_version = "2023-07-01-preview" # "2023-05-15" OR "2024-02-01"
+azure_endpoint = "https://anshugptoo7.openai.azure.com/"
+model_name = "gpt-35-turbo"
 
-# Set your Azure subscription ID
-subscription_id = 'your-subscription-id'
+from openai import AzureOpenAI
 
-# Authenticate with Azure
-credential = DefaultAzureCredential()
+# gets the API Key from environment variable AZURE_OPENAI_API_KEY
+client = AzureOpenAI(
+    # https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#rest-api-versioning
+    api_version=api_version,
+    # https://learn.microsoft.com/en-us/azure/cognitive-services/openai/how-to/create-resource?pivots=web-portal#create-a-resource
+    azure_endpoint=azure_endpoint,
+    api_key = api_key)
 
-# Create OpenAI management client
-openai_client = OpenAIManagementClient(credential, subscription_id)
-
-# Retrieve the OpenAI endpoint and API key
-openai_endpoint = 'your-openai-endpoint'
-openai_api_key = 'your-openai-api-key'
 ```
 
 ## Step 4: Create the Code Enhancement Pipeline
@@ -47,25 +47,31 @@ Now, we'll create the code enhancement pipeline. The pipeline will:
 3. Return the enhanced code.
 
 ```python
-import openai
-
-# Initialize the OpenAI client
-openai.api_key = openai_api_key
-
 def enhance_code(code_snippet):
     # Define the prompt
-    prompt = f"Enhance the following code:\n\n{code_snippet}"
+    prompt = f"""Enhance the following 
+    Only provide code as a response, no other preamable text, explanation or anything else. The response should be only code in string format.
+    Example:
+    input:
+    def hello_world():
+        print('Hellooo, world!)
+    output:
+
+    def hello_world():
+    return 'Hello, world!'
+
+    code:\n\n{code_snippet}"""
 
     # Call the OpenAI API
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # or any other appropriate model
-        prompt=prompt,
-        max_tokens=150,  # Adjust as needed
-        temperature=0.7
-    )
+    response = client.chat.completions.create(
+        messages=[{"role":"system",'content':"You are an expert programmer, you follow standard best practices for answering coding questions."},
+            {"role":"user",'content':prompt}],
+        model = model_name,
+      temperature=0.7,)
+    
 
     # Extract the enhanced code from the response
-    enhanced_code = response.choices[0].text.strip()
+    enhanced_code = response.choices[0].message.content.strip()
     return enhanced_code
 
 
@@ -89,15 +95,23 @@ To make this pipeline accessible via a web service, you can deploy it as an Azur
 2. **Write the Azure Function Code**:
 
 ```python
-import logging
 import azure.functions as func
-from azure.identity import DefaultAzureCredential
-import openai
+import logging
 
-# Initialize the OpenAI client
-openai.api_key = 'your-openai-api-key'
+app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+api_key = "c3cbe9bf946c4f449b4de783ad3043bb"
+api_version = "2023-07-01-preview" # "2023-05-15" OR "2024-02-01"
+azure_endpoint = "https://anshugptoo7.openai.azure.com/"
+model_name = "gpt-35-turbo"
+
+from openai import AzureOpenAI
+
+# gets the API Key from environment variable AZURE_OPENAI_API_KEY
+client = AzureOpenAI(api_version=api_version,azure_endpoint=azure_endpoint, api_key = api_key)
+
+@app.route(route="http_trigger2", auth_level=func.AuthLevel.ANONYMOUS)
+def http_trigger2(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
     code_snippet = req.params.get('code')
@@ -110,28 +124,39 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             code_snippet = req_body.get('code')
 
     if code_snippet:
-        enhanced_code = enhance_code(code_snippet)
-        return func.HttpResponse(enhanced_code)
+        response = enhance_code(code_snippet)
+        return func.HttpResponse(f"response")
     else:
         return func.HttpResponse(
-            "Please pass a code snippet in the request body",
-            status_code=400
+             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             status_code=200
         )
 
 def enhance_code(code_snippet):
     # Define the prompt
-    prompt = f"Enhance the following code:\\n\\n{code_snippet}"
+    prompt = f"""Enhance the following 
+    Only provide code as a response, no other preamable text, explanation or anything else. The response should be only code in string format.
+    Example:
+    input:
+    def hello_world():
+        print('Hellooo, world!)
+    output:
+
+    def hello_world():
+    return 'Hello, world!'
+
+    code:\n\n{code_snippet}"""
 
     # Call the OpenAI API
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # or any other appropriate model
-        prompt=prompt,
-        max_tokens=150,  # Adjust as needed
-        temperature=0.7
-    )
+    response = client.chat.completions.create(
+        messages=[{"role":"system",'content':"You are an expert programmer, you follow standard best practices for answering coding questions."},
+            {"role":"user",'content':prompt}],
+        model = model_name,
+      temperature=0.7,)
+    
 
     # Extract the enhanced code from the response
-    enhanced_code = response.choices[0].text.strip()
+    enhanced_code = response.choices[0].message.content.strip()
     return enhanced_code
 ```
 
@@ -139,3 +164,23 @@ def enhance_code(code_snippet):
 
 - **Test the pipeline**: Ensure that the code enhancement works as expected by testing with various code snippets.
 - **Iterate and improve**: Adjust parameters like max_tokens and temperature for better results. You might also need to fine-tune the model if you have specific requirements.
+
+```python
+import requests
+import json
+
+url = "https://codepipeline.azurewebsites.net"
+path = "/api/http_trigger2"
+
+code ="""
+def print_hello()
+    print("Hello, world!)
+"""
+
+data = json.dumps({"code":code})
+headers = {'Content-Type': 'application/json'}
+
+response = requests.post(url+path, data=data, headers=headers)
+
+print(response.text)
+```
