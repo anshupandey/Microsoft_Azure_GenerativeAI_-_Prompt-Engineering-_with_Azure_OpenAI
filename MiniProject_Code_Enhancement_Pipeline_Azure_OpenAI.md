@@ -22,9 +22,9 @@ You'll need to install the Azure and OpenAI SDKs. You can do this using pip:
 You'll need to authenticate with Azure and set up the OpenAI client.
 
 ```python
-api_key = "c3cbe9bf946c4f449b4de783ad3043bb"
+api_key = "xxxxxxxxxxxx"
 api_version = "2023-07-01-preview" # "2023-05-15" OR "2024-02-01"
-azure_endpoint = "https://anshugptoo7.openai.azure.com/"
+azure_endpoint = "https://xxxxxxxxxx.openai.azure.com/"
 model_name = "gpt-35-turbo"
 
 from openai import AzureOpenAI
@@ -100,9 +100,9 @@ import logging
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.FUNCTION)
 
-api_key = "c3cbe9bf946c4f449b4de783ad3043bb"
+api_key = "xxxxxxxxxxxxxxxx"
 api_version = "2023-07-01-preview" # "2023-05-15" OR "2024-02-01"
-azure_endpoint = "https://anshugptoo7.openai.azure.com/"
+azure_endpoint = "https://xxxxxxx.openai.azure.com/"
 model_name = "gpt-35-turbo"
 
 from openai import AzureOpenAI
