@@ -68,5 +68,74 @@ def enhance_code(code_snippet):
     enhanced_code = response.choices[0].text.strip()
     return enhanced_code
 
+
 # Example usage
-code_snippet = 
+code_snippet = """
+def hello_world():
+    print("Hello, world!")
+"""
+enhanced_code = enhance_code(code_snippet)
+print("Enhanced Code:\n", enhanced_code)
+```
+
+## Step 5: Integrate with Azure Functions (Optional)
+
+To make this pipeline accessible via a web service, you can deploy it as an Azure Function.
+
+1. **Create a new Azure Function**:
+   - Go to the Azure portal and create a new Azure Function.
+   - Choose a Python runtime stack.
+
+2. **Write the Azure Function Code**:
+
+```python
+import logging
+import azure.functions as func
+from azure.identity import DefaultAzureCredential
+import openai
+
+# Initialize the OpenAI client
+openai.api_key = 'your-openai-api-key'
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info('Python HTTP trigger function processed a request.')
+
+    code_snippet = req.params.get('code')
+    if not code_snippet:
+        try:
+            req_body = req.get_json()
+        except ValueError:
+            pass
+        else:
+            code_snippet = req_body.get('code')
+
+    if code_snippet:
+        enhanced_code = enhance_code(code_snippet)
+        return func.HttpResponse(enhanced_code)
+    else:
+        return func.HttpResponse(
+            "Please pass a code snippet in the request body",
+            status_code=400
+        )
+
+def enhance_code(code_snippet):
+    # Define the prompt
+    prompt = f"Enhance the following code:\\n\\n{code_snippet}"
+
+    # Call the OpenAI API
+    response = openai.Completion.create(
+        engine="text-davinci-003",  # or any other appropriate model
+        prompt=prompt,
+        max_tokens=150,  # Adjust as needed
+        temperature=0.7
+    )
+
+    # Extract the enhanced code from the response
+    enhanced_code = response.choices[0].text.strip()
+    return enhanced_code
+```
+
+## Step 6: Testing and Iteration
+
+- **Test the pipeline**: Ensure that the code enhancement works as expected by testing with various code snippets.
+- **Iterate and improve**: Adjust parameters like max_tokens and temperature for better results. You might also need to fine-tune the model if you have specific requirements.
