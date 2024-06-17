@@ -1,0 +1,11 @@
+job_id, job_title, job_skills, job_tools
+1, Data Analyst, SQL; Python; Data Visualization; Statistical Analysis, Tableau; Power BI; Excel
+2, Business Intelligence Developer, ETL; Data Warehousing; SQL; Data Modeling, Informatica; Microsoft SQL Server; Oracle
+3, Machine Learning Engineer, Python; R; Deep Learning; Natural Language Processing, TensorFlow; PyTorch; Keras
+4, Data Scientist, Machine Learning; Statistical Analysis; Python; R, Jupyter Notebook; SAS; MATLAB
+5, Software Engineer, Java; C++; Agile Development; Object-Oriented Programming, Git; JIRA; Jenkins
+6, Data Engineer, ETL; SQL; Data Warehousing; Python, Apache Spark; Hadoop; Kafka
+7, Big Data Engineer, Hadoop; Spark; NoSQL; SQL, Apache HBase; Cassandra; MongoDB
+8, DevOps Engineer, Linux; Docker; Kubernetes; CI/CD, Ansible; Jenkins; GitLab
+9, Cloud Solutions Architect, AWS; Azure; Google Cloud Platform; Infrastructure as Code, Terraform; CloudFormation; Chef
+10, Full Stack Developer, JavaScript; HTML/CSS; Node.js; React, MongoDB; Express.js; AngularJS
